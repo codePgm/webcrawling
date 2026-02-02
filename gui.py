@@ -1,11 +1,12 @@
 import tkinter as tk
-from tkinter import messagebox, scrolledtext, simpledialog
+from tkinter import messagebox, scrolledtext, simpledialog, ttk
 import threading
 import sys
 import os
 from crawler import crawl_local, crawl_pdf
-from summarizer import init_gemini, summarize
+from summarizer import init_gemini, summarize, init_ollama
 from utils import save_local_original, save_summary
+import requests
 
 def get_base_dir():
     if getattr(sys, 'frozen', False):
@@ -72,6 +73,25 @@ def start_gui():
 
     def run():
         try:
+            selected_model = model_var.get()
+
+            if selected_model == "Gemma3":
+                gui_log("모델: Gemma3")
+                model = init_ollama("gemma3:4b") #올라마 모델 선택
+            elif selected_model == "Gemini":
+                gui_log("모델: Gemini")
+                api_key = get_or_create_api_key()
+                model = init_gemini(api_key)
+            elif selected_model == "Exaone":
+                gui_log("모델: Exaone")
+                model = init_ollama("exaone-deep") #올라마 모델 선택
+            elif selected_model == "llama":
+                gui_log("모델: llama")
+                model = init_ollama("llama3.1:8b") #올라마 모델 선택
+            elif selected_model == "Mistral":
+                gui_log("모델: Mistral")
+                model = init_ollama("Mistral") #올라마 모델 선택 
+
             url = url_entry.get().strip()
             if not url:
                 gui_error("URL을 입력하세요.")
@@ -101,15 +121,18 @@ def start_gui():
 
             gui_info("완료", f"2개 파일 저장됨!\n{title}")
 
+        except requests.exceptions.ConnectionError as e:
+            if "11434" in str(e):
+                gui_error("Ollama 서버가 실행 중인지 확인하세요.")
+            else:
+                gui_error("네트워크 연결 오류가 발생했습니다.")
+
         except Exception as e:
             gui_log(f"에러: {e}")
             gui_error(str(e))
 
     def start_thread():
         threading.Thread(target=run, daemon=True).start()
-
-    api_key = get_or_create_api_key()
-    model = init_gemini(api_key)
 
     root = tk.Tk()
     root.title("크롤링 → Gemini 요약 자동화")
@@ -126,12 +149,27 @@ def start_gui():
     url_entry = tk.Entry(root, width=80)
     url_entry.pack(pady=5)
 
+    control_frame = tk.Frame(root)
+    control_frame.pack(pady=10)
+
+    #기본선택
+    model_var = tk.StringVar(value="Gemini")
+
+    model_combo = ttk.Combobox(
+        control_frame,
+        textvariable=model_var,
+        values=["Gemma3", "Gemini", "Exaone", "llama", "Mistral"],
+        state="readonly",
+        width=15
+    )
+    model_combo.pack(side=tk.LEFT, padx=5)
+
     tk.Button(
-        root,
+        control_frame,   # ✅ control_frame에 붙이기
         text="크롤링 + 요약 시작",
         command=start_thread,
         height=2
-    ).pack(pady=10)
+    ).pack(side=tk.LEFT, padx=5)
 
     log_box = scrolledtext.ScrolledText(root, width=85, height=20)
     log_box.pack(pady=10)
