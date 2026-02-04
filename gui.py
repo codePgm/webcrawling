@@ -77,20 +77,20 @@ def start_gui():
 
             if selected_model == "Gemma3":
                 gui_log("모델: Gemma3")
-                model = init_ollama("gemma3:4b") #올라마 모델 선택
+                model = init_ollama("gemma3:4b") #올라마 모델 선택 (젬마3)
             elif selected_model == "Gemini":
                 gui_log("모델: Gemini")
                 api_key = get_or_create_api_key()
                 model = init_gemini(api_key)
             elif selected_model == "Exaone":
                 gui_log("모델: Exaone")
-                model = init_ollama("exaone-deep") #올라마 모델 선택
+                model = init_ollama("exaone-deep") #올라마 모델 선택 (엑시온)
             elif selected_model == "llama":
                 gui_log("모델: llama")
-                model = init_ollama("llama3.1:8b") #올라마 모델 선택
+                model = init_ollama("llama3.1:8b") #올라마 모델 선택 (라마3)
             elif selected_model == "Mistral":
                 gui_log("모델: Mistral")
-                model = init_ollama("Mistral") #올라마 모델 선택 
+                model = init_ollama("Mistral") #올라마 모델 선택 (미스트랄)
 
             url = url_entry.get().strip()
             if not url:
